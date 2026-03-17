@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>P2P Ultimate</title>
+    <title>obshalka_p2p Fixed</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
         :root { 
@@ -46,7 +46,6 @@
         #remote-v { width: 100%; height: 100%; object-fit: cover; }
         #local-v { width: 80px; height: 110px; position: absolute; bottom: 10px; right: 10px; border-radius: 8px; border: 2px solid #fff; object-fit: cover; z-index: 10; background: #222; }
         
-        /* Кнопки медіа - винесені окремо */
         .media-ctrls { display: flex; gap: 8px; margin-bottom: 8px; }
         .m-btn { flex: 1; padding: 10px; border: none; border-radius: 8px; color: white; font-weight: bold; font-size: 12px; cursor: pointer; transition: 0.2s; }
         .m-btn.on { background: #343a40; }
@@ -74,7 +73,7 @@
                 </div>
             </div>
             <div class="conn-row">
-                <input type="text" id="remote-id" placeholder="ID партнера з'явиться тут">
+                <input type="text" id="remote-id" placeholder="ID партнера">
                 <button class="btn-ok" onclick="manualConn()" id="btn-conn">OK</button>
             </div>
         </div>
@@ -118,16 +117,19 @@
         const params = new URLSearchParams(window.location.search);
         if (params.get('peer')) {
             document.getElementById('remote-id').value = params.get('peer');
-            setTimeout(manualConn, 1000);
+            setTimeout(manualConn, 1200);
         }
     });
 
-    // Коли хтось підключається до тебе
+    // Виправлена логіка вхідного з'єднання
     peer.on('connection', c => { 
         conn = c; 
-        document.getElementById('remote-id').value = c.peer; // АВТОЗАПОВНЕННЯ ID
         setupConn(); 
-        addMsg("СИСТЕМА", "Партнер підключився", "sys"); 
+        // Чекаємо відкриття каналу, щоб точно знати ID
+        conn.on('open', () => {
+            document.getElementById('remote-id').value = conn.peer;
+            addMsg("СИСТЕМА", "Партнер підключився: " + conn.peer, "sys");
+        });
     });
 
     peer.on('call', async call => {
@@ -149,9 +151,9 @@
 
     function setupConn() {
         conn.on('open', () => { 
-            document.getElementById('remote-id').value = conn.peer; // АВТОЗАПОВНЕННЯ ПРИ ТВОЄМУ ПІДКЛЮЧЕННІ
+            document.getElementById('remote-id').value = conn.peer;
             document.getElementById('btn-conn').innerText = "✓";
-            addMsg("СИСТЕМА", "Зв'язок встановлено", "sys");
+            addMsg("СИСТЕМА", "Зв'язок з " + conn.peer, "sys");
         });
         conn.on('data', data => {
             if (data.file) {
@@ -224,7 +226,7 @@
         tab.classList.add('active');
     }
 
-    function copyId() { navigator.clipboard.writeText(document.getElementById('my-id').innerText); alert("Скопійовано"); }
+    function copyId() { navigator.clipboard.writeText(document.getElementById('my-id').innerText); alert("ID скопійовано"); }
     function shareL() {
         const url = `${window.location.origin}${window.location.pathname}?peer=${document.getElementById('my-id').innerText}`;
         if (navigator.share) navigator.share({ title: 'P2P Chat', url: url });
