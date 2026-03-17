@@ -2,7 +2,7 @@
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>P2P Stream Messenger</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
@@ -34,7 +34,6 @@
         .header { background: var(--header-bg); padding: 12px; border-radius: 10px; margin-bottom: 10px; display: flex; flex-direction: column; gap: 10px; }
         .id-row { display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
         
-        /* Кнопки з вашого фото з розривом */
         .id-actions { display: flex; flex-direction: column; gap: 8px; }
         .small-btn { 
             background: #128c7e; 
@@ -45,7 +44,6 @@
             cursor: pointer; 
             font-size: 13px; 
             font-weight: 500;
-            text-align: center;
         }
 
         .connect-row { display: flex; gap: 5px; }
@@ -64,7 +62,7 @@
         .send-btn { background: var(--primary); color: white; border-radius: 50%; width: 42px; height: 42px; border: none; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; }
 
         .video-container { position: relative; background: #000; border-radius: 15px; flex: 1; overflow: hidden; display: flex; align-items: center; justify-content: center; }
-        #local-video { width: 90px; height: 120px; position: absolute; bottom: 15px; right: 15px; border-radius: 8px; border: 2px solid white; object-fit: cover; background: #222; }
+        #local-video { width: 90px; height: 120px; position: absolute; bottom: 15px; right: 15px; border-radius: 8px; border: 2px solid white; object-fit: cover; background: #222; z-index: 10; }
         #remote-video { width: 100%; height: 100%; object-fit: cover; }
 
         .video-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
@@ -92,7 +90,7 @@
     <div class="content">
         <div class="header">
             <div class="id-row">
-                <span>Мій ID: <b id="my-id">...</b></span>
+                <span>Мій ID: <b id="my-id">Завантаження...</b></span>
                 <div class="id-actions">
                     <button class="small-btn" onclick="copyId()">Копіювати</button>
                     <button class="small-btn" onclick="shareLink()">Поділитися</button>
@@ -137,38 +135,37 @@
 <div class="modal-overlay" id="modal-overlay" onclick="toggleModal(false)">
     <div class="modal" onclick="event.stopPropagation()">
         <h3>Конфіденційність</h3>
-<p>
-Цей месенджер передає дані напряму (P2P). Ваші повідомлення та відео не зберігаються на серверах.
-
-<br><br>
-<b>Відсутність посередника (True P2P):</b><br>
-У звичайних месенджерах (Telegram, WhatsApp) ваші дані проходять через сервери компаній. Тут, завдяки WebRTC, дані йдуть напряму від вашого пристрою до пристрою співрозмовника. Сервер PeerJS використовується лише кілька секунд на старті, щоб «познайомити» пристрої.
-
-<br><br>
-<b>Шифрування "з коробки":</b><br>
-WebRTC за замовчуванням використовує DTLS і SRTP. Це означає, що навіть якщо хтось перехопить трафік, він побачить лише зашифровані дані.
-
-<br><br>
-<b>Жодних баз даних:</b><br>
-Не потрібна реєстрація, номер телефону чи пошта. Немає акаунта — немає що зламувати.
-
-<br><br>
-<b>Мінімум слідів:</b><br>
-Після закриття вкладки вся історія зникає (RAM-only), оскільки повідомлення не зберігаються в localStorage чи базах даних.
-</p>
-
-<button class="close-modal" onclick="toggleModal(false)">Зрозуміло</button>
+        <p>Для роботи на iOS: відкривайте через Safari та вимкніть режим енергозбереження.</p>
+        <button class="close-modal" onclick="toggleModal(false)">Зрозуміло</button>
     </div>
 </div>
 
 <script>
-    let peer = new Peer();
+    // Додано STUN-сервери для iOS та мобільного інтернету
+    const peer = new Peer({
+        config: {
+            'iceServers': [
+                { urls: 'stun:stun.l.google.com:19302' },
+                { urls: 'stun:stun1.l.google.com:19302' },
+                { urls: 'stun:stun2.l.google.com:19302' }
+            ]
+        }
+    });
+
     let conn;
     let localStream;
     let videoEnabled = true;
     let audioEnabled = true;
 
-    peer.on('open', id => { document.getElementById('my-id').innerText = id; });
+    peer.on('open', id => { 
+        document.getElementById('my-id').innerText = id;
+        console.log('Мій ID:', id);
+    });
+
+    peer.on('error', err => {
+        console.error('Помилка PeerJS:', err.type);
+        addMsg("Система", "Помилка: " + err.type, "sys-msg");
+    });
 
     peer.on('connection', c => { 
         conn = c; 
@@ -179,24 +176,36 @@ WebRTC за замовчуванням використовує DTLS і SRTP. Ц
     peer.on('call', async call => {
         if (confirm("Вхідний дзвінок!")) {
             showPage('video-page', document.getElementById('tab-video'));
-            localStream = await navigator.mediaDevices.getUserMedia({video: true, audio: true});
-            document.getElementById('local-video').srcObject = localStream;
-            call.answer(localStream);
-            call.on('stream', s => { document.getElementById('remote-video').srcObject = s; });
+            try {
+                localStream = await navigator.mediaDevices.getUserMedia({video: true, audio: true});
+                document.getElementById('local-video').srcObject = localStream;
+                call.answer(localStream);
+                call.on('stream', s => { 
+                    document.getElementById('remote-video').srcObject = s; 
+                });
+            } catch (e) {
+                alert("Не вдалося отримати доступ до камери: " + e.message);
+            }
         }
     });
 
     async function startCall() {
         const rId = document.getElementById('remote-id').value;
         if (!rId) return alert("Введіть ID");
-        localStream = await navigator.mediaDevices.getUserMedia({video: true, audio: true});
-        document.getElementById('local-video').srcObject = localStream;
-        const call = peer.call(rId, localStream);
-        call.on('stream', s => { document.getElementById('remote-video').srcObject = s; });
+        try {
+            localStream = await navigator.mediaDevices.getUserMedia({video: true, audio: true});
+            document.getElementById('local-video').srcObject = localStream;
+            const call = peer.call(rId, localStream);
+            call.on('stream', s => { 
+                document.getElementById('remote-video').srcObject = s; 
+            });
+        } catch (e) {
+            alert("Помилка камери: " + e.message);
+        }
     }
 
     function toggleVideo() {
-        if (localStream) {
+        if (localStream && localStream.getVideoTracks()[0]) {
             videoEnabled = !videoEnabled;
             localStream.getVideoTracks()[0].enabled = videoEnabled;
             const btn = document.getElementById('btn-video-toggle');
@@ -206,7 +215,7 @@ WebRTC за замовчуванням використовує DTLS і SRTP. Ц
     }
 
     function toggleAudio() {
-        if (localStream) {
+        if (localStream && localStream.getAudioTracks()[0]) {
             audioEnabled = !audioEnabled;
             localStream.getAudioTracks()[0].enabled = audioEnabled;
             const btn = document.getElementById('btn-audio-toggle');
@@ -218,8 +227,8 @@ WebRTC за замовчуванням використовує DTLS і SRTP. Ц
     function endCall() { 
         if(localStream) { 
             localStream.getTracks().forEach(t => t.stop()); 
-            location.reload(); 
-        } 
+        }
+        location.reload(); 
     }
 
     function manualConnect() {
@@ -231,10 +240,14 @@ WebRTC за замовчуванням використовує DTLS і SRTP. Ц
 
     function setupConn() {
         conn.on('open', () => { 
-            document.getElementById('btn-conn').innerText = "З'єднано"; 
+            document.getElementById('btn-conn').innerText = "З'єднано";
+            addMsg("Система", "З'єднання встановлено", "sys-msg");
         });
         conn.on('data', data => {
             addMsg("Співрозмовник", data, "other");
+        });
+        conn.on('close', () => {
+            addMsg("Система", "З'єднання розірвано", "sys-msg");
         });
     }
 
@@ -263,7 +276,18 @@ WebRTC за замовчуванням використовує DTLS і SRTP. Ц
         tab.classList.add('active');
     }
 
-    function copyId() { navigator.clipboard.writeText(document.getElementById('my-id').innerText); alert("ID скопійовано!"); }
+    function copyId() { 
+        const id = document.getElementById('my-id').innerText;
+        navigator.clipboard.writeText(id); 
+        alert("ID скопійовано!"); 
+    }
+    
+    function shareLink() {
+        const url = window.location.origin + window.location.pathname + "?peer=" + document.getElementById('my-id').innerText;
+        navigator.clipboard.writeText(url);
+        alert("Посилання скопійовано!");
+    }
+
     function toggleModal(s) { document.getElementById('modal-overlay').style.display = s ? 'flex' : 'none'; }
 </script>
 </body>
