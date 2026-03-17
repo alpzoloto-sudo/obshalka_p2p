@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>P2P Stream Messenger</title>
+    <title>P2P Messenger</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
         :root { 
@@ -22,75 +22,46 @@
         }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; display: flex; justify-content: center; height: 100vh; overflow: hidden; color: var(--text-main); }
         .messenger { width: 100%; max-width: 450px; background: var(--card-bg); display: flex; flex-direction: column; box-shadow: 0 5px 25px rgba(0,0,0,0.3); }
-
         .tabs { display: flex; background: var(--primary); color: white; min-height: 55px; }
         .tab { flex: 1; display: flex; align-items: center; justify-content: center; cursor: pointer; font-weight: bold; opacity: 0.6; transition: 0.3s; border-bottom: 4px solid transparent; }
         .tab.active { opacity: 1; border-bottom: 4px solid var(--accent); }
-
         .content { flex: 1; display: flex; flex-direction: column; overflow: hidden; padding: 15px; position: relative; }
         .page { display: none; height: 100%; flex-direction: column; }
         .page.active { display: flex; }
-
         .header { background: var(--header-bg); padding: 12px; border-radius: 10px; margin-bottom: 10px; display: flex; flex-direction: column; gap: 10px; }
-        .id-row { display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
-        
-        .id-actions { display: flex; flex-direction: column; gap: 8px; }
-        .small-btn { 
-            background: #128c7e; 
-            color: white; 
-            border: none; 
-            padding: 8px 15px; 
-            border-radius: 8px; 
-            cursor: pointer; 
-            font-size: 13px; 
-            font-weight: 500;
-        }
-
+        .id-row { display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
+        .id-actions { display: flex; flex-direction: column; gap: 5px; }
+        .small-btn { background: #128c7e; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; }
         .connect-row { display: flex; gap: 5px; }
         .connect-row input { flex: 1; padding: 10px; border: 1px solid var(--text-sub); border-radius: 5px; font-size: 14px; background: var(--card-bg); color: var(--text-main); outline: none; }
         .btn-connect { background: #007bff; color: white; border: none; padding: 0 15px; border-radius: 5px; cursor: pointer; font-weight: bold; }
-
-        #chat { flex: 1; border: 1px solid var(--input-bg); overflow-y: auto; padding: 10px; background: var(--chat-bg); border-radius: 8px; margin-bottom: 10px; display: flex; flex-direction: column; }
-        .msg { margin-bottom: 10px; padding: 8px 12px; border-radius: 8px; max-width: 85%; word-break: break-all; font-size: 15px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
-        .msg.me { align-self: flex-end; background: var(--my-msg); color: #000 !important; }
-        .msg.other { align-self: flex-start; background: var(--other-msg); border: 1px solid var(--input-bg); }
-        .sys-msg { align-self: center; font-size: 11px; color: var(--text-sub); background: var(--header-bg); padding: 4px 12px; border-radius: 12px; margin: 5px 0; text-align: center; }
-
+        #chat { flex: 1; overflow-y: auto; padding: 10px; background: var(--chat-bg); border-radius: 8px; margin-bottom: 10px; display: flex; flex-direction: column; border: 1px solid var(--input-bg); }
+        .msg { margin-bottom: 10px; padding: 8px 12px; border-radius: 8px; max-width: 85%; font-size: 15px; }
+        .msg.me { align-self: flex-end; background: var(--my-msg); color: #000; }
+        .msg.other { align-self: flex-start; background: var(--other-msg); border: 1px solid #ddd; }
+        .sys-msg { align-self: center; font-size: 11px; color: var(--text-sub); margin: 5px 0; }
         .input-area { display: flex; align-items: center; gap: 5px; background: var(--input-bg); padding: 8px; border-radius: 25px; }
-        .input-area input[type="text"] { flex: 1; border: none; background: transparent; padding: 8px; outline: none; font-size: 16px; color: var(--text-main); }
-        .icon-btn { background: none; border: none; cursor: pointer; font-size: 22px; padding: 5px; color: var(--text-sub); }
-        .send-btn { background: var(--primary); color: white; border-radius: 50%; width: 42px; height: 42px; border: none; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; }
-
+        .input-area input { flex: 1; border: none; background: transparent; padding: 8px; outline: none; color: var(--text-main); }
+        .send-btn { background: var(--primary); color: white; border-radius: 50%; width: 40px; height: 40px; border: none; }
         .video-container { position: relative; background: #000; border-radius: 15px; flex: 1; overflow: hidden; display: flex; align-items: center; justify-content: center; }
-        #local-video { width: 90px; height: 120px; position: absolute; bottom: 15px; right: 15px; border-radius: 8px; border: 2px solid white; object-fit: cover; background: #222; z-index: 10; }
+        #local-video { width: 90px; height: 120px; position: absolute; bottom: 10px; right: 10px; border-radius: 8px; border: 2px solid white; object-fit: cover; z-index: 10; }
         #remote-video { width: 100%; height: 100%; object-fit: cover; }
-
-        .video-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
-        .btn { padding: 12px; border: none; border-radius: 10px; color: white; font-weight: bold; cursor: pointer; font-size: 12px; }
-        .btn-call { grid-column: span 2; padding: 15px; font-size: 16px; }
-        .btn-toggle { background: #555; }
-        .btn-toggle.off { background: #ea0038; }
-
-        .footer { padding: 10px; text-align: center; }
-        .info-link { font-size: 12px; color: var(--primary); cursor: pointer; text-decoration: underline; }
-
-        .modal-overlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.8); align-items:center; justify-content:center; z-index: 9999; }
-        .modal { background: var(--card-bg); padding: 25px; border-radius: 15px; max-width: 350px; margin: 20px; }
-        .close-modal { width: 100%; padding: 12px; margin-top: 15px; background: var(--primary); color: white; border-radius: 8px; cursor: pointer; border:none; font-weight: bold; }
+        .video-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+        .btn { padding: 12px; border: none; border-radius: 10px; color: white; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
 
 <div class="messenger">
     <div class="tabs">
-        <div class="tab active" id="tab-chat" onclick="showPage('chat-page', this)">ЧАТ</div>
-        <div class="tab" id="tab-video" onclick="showPage('video-page', this)">ДЗВІНОК</div>
+        <div class="tab active" onclick="showPage('chat-page', this)">ЧАТ</div>
+        <div class="tab" onclick="showPage('video-page', this)">ДЗВІНОК</div>
     </div>
 
     <div class="content">
         <div class="header">
             <div class="id-row">
-                <span>Мій ID: <b id="my-id">Завантаження...</b></span>
+                <span>Мій ID: <b id="my-id">...</b></span>
                 <div class="id-actions">
                     <button class="small-btn" onclick="copyId()">Копіювати</button>
                     <button class="small-btn" onclick="shareLink()">Поділитися</button>
@@ -105,8 +76,6 @@
         <div id="chat-page" class="page active">
             <div id="chat"></div>
             <div class="input-area">
-                <button class="icon-btn" onclick="document.getElementById('file-input').click()">📎</button>
-                <input type="file" id="file-input" style="display:none" onchange="startStreaming(this)">
                 <input type="text" id="msg-input" placeholder="Повідомлення..." onkeydown="if(event.key==='Enter') sendText()">
                 <button class="send-btn" onclick="sendText()">➤</button>
             </div>
@@ -114,146 +83,75 @@
 
         <div id="video-page" class="page">
             <div class="video-container">
-                <div id="video-placeholder" style="color:white;position:absolute;">Камера вимкнена</div>
                 <video id="remote-video" autoplay playsinline></video>
                 <video id="local-video" autoplay muted playsinline></video>
             </div>
             <div class="video-btns">
-                <button id="btn-video-toggle" class="btn btn-toggle" onclick="toggleVideo()">Камера: ВКЛ</button>
-                <button id="btn-audio-toggle" class="btn btn-toggle" onclick="toggleAudio()">Мік: ВКЛ</button>
-                <button class="btn btn-call" style="background: #25d366;" onclick="startCall()">Подзвонити</button>
-                <button class="btn btn-call" style="background: #ea0038;" onclick="endCall()">Завершити</button>
+                <button class="btn" style="background: #25d366; grid-column: span 2;" onclick="startCall()">Подзвонити</button>
+                <button class="btn" style="background: #ea0038; grid-column: span 2;" onclick="endCall()">Завершити</button>
             </div>
         </div>
-    </div>
-
-    <div class="footer">
-        <span class="info-link" onclick="toggleModal(true)">Про анонімність P2P</span>
-    </div>
-</div>
-
-<div class="modal-overlay" id="modal-overlay" onclick="toggleModal(false)">
-    <div class="modal" onclick="event.stopPropagation()">
-        <h3>Конфіденційність</h3>
-        <p>Для роботи на iOS: відкривайте через Safari та вимкніть режим енергозбереження.</p>
-        <button class="close-modal" onclick="toggleModal(false)">Зрозуміло</button>
     </div>
 </div>
 
 <script>
-    // Додано STUN-сервери для iOS та мобільного інтернету
     const peer = new Peer({
         config: {
             'iceServers': [
                 { urls: 'stun:stun.l.google.com:19302' },
-                { urls: 'stun:stun1.l.google.com:19302' },
-                { urls: 'stun:stun2.l.google.com:19302' }
+                { urls: 'stun:stun1.l.google.com:19302' }
             ]
         }
     });
 
     let conn;
     let localStream;
-    let videoEnabled = true;
-    let audioEnabled = true;
 
     peer.on('open', id => { 
         document.getElementById('my-id').innerText = id;
-        console.log('Мій ID:', id);
-    });
-
-    peer.on('error', err => {
-        console.error('Помилка PeerJS:', err.type);
-        addMsg("Система", "Помилка: " + err.type, "sys-msg");
+        // Авто-підключення за посиланням
+        const params = new URLSearchParams(window.location.search);
+        const peerId = params.get('peer');
+        if (peerId) {
+            document.getElementById('remote-id').value = peerId;
+            setTimeout(() => manualConnect(), 500);
+        }
     });
 
     peer.on('connection', c => { 
         conn = c; 
         setupConn(); 
-        addMsg("Система", "Співрозмовник підключився", "sys-msg"); 
+        addMsg("Система", "Підключено", "sys-msg"); 
     });
 
     peer.on('call', async call => {
-        if (confirm("Вхідний дзвінок!")) {
-            showPage('video-page', document.getElementById('tab-video'));
-            try {
-                localStream = await navigator.mediaDevices.getUserMedia({video: true, audio: true});
-                document.getElementById('local-video').srcObject = localStream;
-                call.answer(localStream);
-                call.on('stream', s => { 
-                    document.getElementById('remote-video').srcObject = s; 
-                });
-            } catch (e) {
-                alert("Не вдалося отримати доступ до камери: " + e.message);
-            }
+        if (confirm("Вхідний дзвінок?")) {
+            showPage('video-page', document.querySelectorAll('.tab')[1]);
+            localStream = await navigator.mediaDevices.getUserMedia({video: true, audio: true});
+            document.getElementById('local-video').srcObject = localStream;
+            call.answer(localStream);
+            call.on('stream', s => document.getElementById('remote-video').srcObject = s);
         }
     });
 
-    async function startCall() {
-        const rId = document.getElementById('remote-id').value;
-        if (!rId) return alert("Введіть ID");
-        try {
-            localStream = await navigator.mediaDevices.getUserMedia({video: true, audio: true});
-            document.getElementById('local-video').srcObject = localStream;
-            const call = peer.call(rId, localStream);
-            call.on('stream', s => { 
-                document.getElementById('remote-video').srcObject = s; 
-            });
-        } catch (e) {
-            alert("Помилка камери: " + e.message);
-        }
-    }
-
-    function toggleVideo() {
-        if (localStream && localStream.getVideoTracks()[0]) {
-            videoEnabled = !videoEnabled;
-            localStream.getVideoTracks()[0].enabled = videoEnabled;
-            const btn = document.getElementById('btn-video-toggle');
-            btn.innerText = videoEnabled ? "Камера: ВКЛ" : "Камера: ВИМК";
-            btn.classList.toggle('off', !videoEnabled);
-        }
-    }
-
-    function toggleAudio() {
-        if (localStream && localStream.getAudioTracks()[0]) {
-            audioEnabled = !audioEnabled;
-            localStream.getAudioTracks()[0].enabled = audioEnabled;
-            const btn = document.getElementById('btn-audio-toggle');
-            btn.innerText = audioEnabled ? "Мік: ВКЛ" : "Мік: ВИМК";
-            btn.classList.toggle('off', !audioEnabled);
-        }
-    }
-
-    function endCall() { 
-        if(localStream) { 
-            localStream.getTracks().forEach(t => t.stop()); 
-        }
-        location.reload(); 
-    }
-
     function manualConnect() {
         const id = document.getElementById('remote-id').value.trim();
-        if (!id) return;
+        if (!id || id === peer.id) return;
         conn = peer.connect(id);
         setupConn();
     }
 
     function setupConn() {
         conn.on('open', () => { 
-            document.getElementById('btn-conn').innerText = "З'єднано";
-            addMsg("Система", "З'єднання встановлено", "sys-msg");
+            document.getElementById('btn-conn').innerText = "ОК";
+            addMsg("Система", "Зв'язок є", "sys-msg");
         });
-        conn.on('data', data => {
-            addMsg("Співрозмовник", data, "other");
-        });
-        conn.on('close', () => {
-            addMsg("Система", "З'єднання розірвано", "sys-msg");
-        });
+        conn.on('data', data => addMsg("Співрозмовник", data, "other"));
     }
 
     function sendText() {
         const input = document.getElementById('msg-input');
-        if (conn && conn.open && input.value.trim()) {
+        if (conn && conn.open && input.value) {
             conn.send(input.value);
             addMsg("Ви", input.value, "me");
             input.value = "";
@@ -263,11 +161,21 @@
     function addMsg(who, text, cls) {
         const chat = document.getElementById('chat');
         const div = document.createElement('div');
-        div.className = (cls === "sys-msg") ? "sys-msg" : "msg " + cls;
-        div.innerHTML = (cls === "sys-msg") ? text : `<b>${who}:</b><br>${text}`;
+        div.className = "msg " + cls;
+        div.innerHTML = cls === "sys-msg" ? text : `<b>${who}</b><br>${text}`;
         chat.appendChild(div);
         chat.scrollTop = chat.scrollHeight;
     }
+
+    async function startCall() {
+        const rId = document.getElementById('remote-id').value;
+        localStream = await navigator.mediaDevices.getUserMedia({video: true, audio: true});
+        document.getElementById('local-video').srcObject = localStream;
+        const call = peer.call(rId, localStream);
+        call.on('stream', s => document.getElementById('remote-video').srcObject = s);
+    }
+
+    function endCall() { location.reload(); }
 
     function showPage(pId, tab) {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -276,19 +184,24 @@
         tab.classList.add('active');
     }
 
-    function copyId() { 
+    function copyId() {
         const id = document.getElementById('my-id').innerText;
-        navigator.clipboard.writeText(id); 
-        alert("ID скопійовано!"); 
-    }
-    
-    function shareLink() {
-        const url = window.location.origin + window.location.pathname + "?peer=" + document.getElementById('my-id').innerText;
-        navigator.clipboard.writeText(url);
-        alert("Посилання скопійовано!");
+        navigator.clipboard.writeText(id).then(() => alert("ID скопійовано"));
     }
 
-    function toggleModal(s) { document.getElementById('modal-overlay').style.display = s ? 'flex' : 'none'; }
+    async function shareLink() {
+        const id = document.getElementById('my-id').innerText;
+        const url = `${window.location.origin}${window.location.pathname}?peer=${id}`;
+        
+        if (navigator.share) {
+            try {
+                await navigator.share({ title: 'P2P Chat', url: url });
+            } catch (err) { console.log("Відмінено"); }
+        } else {
+            navigator.clipboard.writeText(url);
+            alert("Посилання копійовано в буфер");
+        }
+    }
 </script>
 </body>
 </html>
