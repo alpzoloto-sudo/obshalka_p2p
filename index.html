@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>P2P Pro Messenger</title>
+    <title>P2P Messenger Full</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
         :root { 
@@ -14,52 +14,61 @@
         }
         body { 
             font-family: -apple-system, system-ui, sans-serif; 
-            background: var(--bg); margin: 0; 
+            background: var(--bg); margin: 0; padding: 0;
             display: flex; justify-content: center; 
             height: 100dvh; overflow: hidden; color: var(--text-main);
         }
         .messenger { 
             width: 100%; max-width: 450px; background: var(--card-bg); 
             display: flex; flex-direction: column; height: 100%;
-            padding-bottom: env(safe-area-inset-bottom); /* Захист від панелі iOS */
+            padding-bottom: env(safe-area-inset-bottom);
         }
 
-        .tabs { display: flex; background: var(--primary); min-height: 50px; flex-shrink: 0; }
+        /* Tabs */
+        .tabs { display: flex; background: var(--primary); min-height: 44px; flex-shrink: 0; }
         .tab { flex: 1; display: flex; align-items: center; justify-content: center; cursor: pointer; font-weight: bold; opacity: 0.6; font-size: 13px; border-bottom: 3px solid transparent; }
         .tab.active { opacity: 1; border-bottom: 3px solid var(--accent); }
 
-        .content { flex: 1; display: flex; flex-direction: column; overflow: hidden; padding: 8px; gap: 5px; }
+        .content { flex: 1; display: flex; flex-direction: column; overflow: hidden; padding: 8px; gap: 4px; }
         .page { display: none; height: 100%; flex-direction: column; overflow: hidden; }
         .page.active { display: flex; }
 
-        .header { background: var(--header-bg); padding: 8px; border-radius: 8px; flex-shrink: 0; }
-        .id-row { display: flex; justify-content: space-between; align-items: center; font-size: 10px; margin-bottom: 5px; }
-        .id-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 60%; font-family: monospace; }
+        /* Compact Header */
+        .header { background: var(--header-bg); padding: 8px; border-radius: 8px; flex-shrink: 0; margin-bottom: 4px; }
+        .id-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+        .id-label { font-size: 10px; color: var(--text-sub); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 55%; font-family: monospace; }
         
-        .btn-group { display: flex; gap: 4px; }
-        .s-btn { background: #128c7e; color: white; border: none; padding: 5px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; }
+        .btn-grp { display: flex; gap: 4px; }
+        .tiny-btn { background: #128c7e; color: white; border: none; padding: 6px 10px; border-radius: 4px; font-size: 10px; font-weight: bold; }
         
-        .conn-input-row { display: flex; gap: 4px; }
-        .conn-input-row input { flex: 1; background: var(--bg); border: 1px solid var(--input-bg); padding: 8px; border-radius: 6px; color: #fff; font-size: 13px; outline: none; }
+        .conn-row { display: flex; gap: 4px; }
+        .conn-row input { flex: 1; background: var(--bg); border: 1px solid var(--input-bg); padding: 8px; border-radius: 6px; color: #fff; font-size: 13px; outline: none; }
         .btn-ok { background: #007bff; color: white; border: none; padding: 0 12px; border-radius: 6px; font-weight: bold; }
 
+        /* Chat Area */
         #chat { flex: 1; overflow-y: auto; padding: 8px; background: var(--chat-bg); border-radius: 8px; display: flex; flex-direction: column; gap: 6px; border: 1px solid var(--header-bg); }
-        .msg { padding: 6px 10px; border-radius: 8px; max-width: 85%; font-size: 14px; }
+        .msg { padding: 6px 10px; border-radius: 8px; max-width: 85%; font-size: 14px; word-wrap: break-word; }
         .msg.me { align-self: flex-end; background: var(--my-msg); }
         .msg.other { align-self: flex-start; background: var(--other-msg); }
-        .sys { align-self: center; font-size: 10px; color: var(--text-sub); }
+        .sys { align-self: center; font-size: 10px; color: var(--text-sub); margin: 4px 0; }
 
-        .input-bar { display: flex; gap: 6px; align-items: center; padding: 8px 0; flex-shrink: 0; }
-        .file-btn { font-size: 20px; background: none; border: none; color: var(--text-sub); cursor: pointer; padding: 0 5px; }
-        .input-bar input[type="text"] { flex: 1; background: var(--input-bg); border: none; padding: 10px 15px; border-radius: 20px; color: #fff; font-size: 15px; outline: none; }
-        .send-btn { background: var(--primary); border: none; width: 40px; height: 40px; border-radius: 50%; color: white; flex-shrink: 0; }
+        /* Input Area - WITH PAPERCLIP */
+        .input-bar { display: flex; gap: 6px; align-items: center; padding: 6px 0; flex-shrink: 0; }
+        .clip-btn { font-size: 22px; background: none; border: none; color: var(--text-sub); cursor: pointer; padding: 0 4px; }
+        .input-bar input[type="text"] { flex: 1; background: var(--input-bg); border: none; padding: 10px 14px; border-radius: 20px; color: #fff; font-size: 15px; outline: none; }
+        .send-btn { background: var(--primary); border: none; width: 38px; height: 38px; border-radius: 50%; color: white; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
 
+        /* Video Area */
         .video-box { position: relative; background: #000; border-radius: 12px; flex: 1; overflow: hidden; min-height: 150px; }
         #remote-v { width: 100%; height: 100%; object-fit: cover; }
-        #local-v { width: 70px; height: 95px; position: absolute; bottom: 8px; right: 8px; border-radius: 6px; border: 1px solid #fff; object-fit: cover; z-index: 5; }
+        #local-v { width: 75px; height: 100px; position: absolute; bottom: 8px; right: 8px; border-radius: 6px; border: 1px solid #fff; object-fit: cover; z-index: 5; background: #222; }
         
         .video-ctrls { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 8px 0; flex-shrink: 0; }
-        .v-btn { padding: 14px 5px; border: none; border-radius: 10px; color: white; font-weight: bold; font-size: 14px; }
+        .v-btn { padding: 12px 5px; border: none; border-radius: 8px; color: white; font-weight: bold; font-size: 12px; cursor: pointer; }
+        .v-btn.toggle { background: #555; }
+        .v-btn.toggle.off { background: #ea0038; }
+        .v-btn.call { background: #25d366; grid-column: span 2; padding: 14px; font-size: 14px; }
+        .v-btn.hang { background: #ea0038; grid-column: span 2; }
     </style>
 </head>
 <body>
@@ -73,14 +82,14 @@
     <div class="content">
         <div class="header">
             <div class="id-row">
-                <div class="id-text">ID: <span id="my-id">...</span></div>
-                <div class="btn-group">
-                    <button class="s-btn" onclick="copyId()">COPY</button>
-                    <button class="s-btn" onclick="shareL()">SHARE</button>
+                <div class="id-label">Мій ID: <span id="my-id">...</span></div>
+                <div class="btn-grp">
+                    <button class="tiny-btn" onclick="copyId()">COPY</button>
+                    <button class="tiny-btn" onclick="shareL()">SHARE</button>
                 </div>
             </div>
-            <div class="conn-input-row">
-                <input type="text" id="remote-id" placeholder="ID друга">
+            <div class="conn-row">
+                <input type="text" id="remote-id" placeholder="Введіть ID друга">
                 <button class="btn-ok" onclick="manualConn()" id="btn-conn">OK</button>
             </div>
         </div>
@@ -88,8 +97,9 @@
         <div id="chat-p" class="page active">
             <div id="chat"></div>
             <div class="input-bar">
-                <button class="file-btn" onclick="document.getElementById('f-in').click()">📎</button>
+                <button class="clip-btn" onclick="document.getElementById('f-in').click()">📎</button>
                 <input type="file" id="f-in" style="display:none" onchange="sendFile(this)">
+                
                 <input type="text" id="m-in" placeholder="Повідомлення..." onkeydown="if(event.key==='Enter') sendT()">
                 <button class="send-btn" onclick="sendT()">➤</button>
             </div>
@@ -101,8 +111,10 @@
                 <video id="local-v" autoplay muted playsinline></video>
             </div>
             <div class="video-ctrls">
-                <button class="v-btn" style="background: #25d366; grid-column: span 2;" onclick="startC()">📞 ПОДЗВОНИТИ</button>
-                <button class="v-btn" style="background: #ea0038; grid-column: span 2;" onclick="endC()">✖ ЗАВЕРШИТИ</button>
+                <button id="cam-tog" class="v-btn toggle" onclick="toggleCam()">Камера: ВКЛ</button>
+                <button id="mic-tog" class="v-btn toggle" onclick="toggleMic()">Мік: ВКЛ</button>
+                <button class="v-btn call" onclick="startC()">📞 ПОДЗВОНИТИ</button>
+                <button class="v-btn hang" onclick="location.reload()">✖ ЗАВЕРШИТИ</button>
             </div>
         </div>
     </div>
@@ -113,7 +125,7 @@
         config: {'iceServers': [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }]}
     });
 
-    let conn, localStream;
+    let conn, localStream, camOn = true, micOn = true;
 
     peer.on('open', id => { 
         document.getElementById('my-id').innerText = id;
@@ -124,11 +136,7 @@
         }
     });
 
-    peer.on('connection', c => { 
-        conn = c; 
-        setupConn(); 
-        addMsg("СИСТЕМА", "Підключено", "sys"); 
-    });
+    peer.on('connection', c => { conn = c; setupConn(); addMsg("СИСТЕМА", "Підключено", "sys"); });
 
     peer.on('call', async call => {
         if (confirm("Вхідний дзвінок! Відповісти?")) {
@@ -156,7 +164,7 @@
             if (data.file) {
                 const blob = new Blob([data.blob], {type: data.type});
                 const url = URL.createObjectURL(blob);
-                addMsg("ДРУГ", `<a href="${url}" download="${data.name}" style="color:var(--accent)">📎 Файл: ${data.name}</a>`, "other");
+                addMsg("ДРУГ", `<a href="${url}" download="${data.name}" style="color:var(--accent); text-decoration: underline;">📎 Файл: ${data.name}</a>`, "other");
             } else {
                 addMsg("ДРУГ", data, "other");
             }
@@ -178,7 +186,7 @@
         const reader = new FileReader();
         reader.onload = () => {
             conn.send({ file: true, name: file.name, type: file.type, blob: reader.result });
-            addMsg("Я", `📎 Файл відправлено: ${file.name}`, "me");
+            addMsg("Я", `📎 Відправлено файл: ${file.name}`, "me");
         };
         reader.readAsArrayBuffer(file);
     }
@@ -201,7 +209,25 @@
         call.on('stream', s => document.getElementById('remote-v').srcObject = s);
     }
 
-    function endC() { location.reload(); }
+    function toggleCam() {
+        if (localStream) {
+            camOn = !camOn;
+            localStream.getVideoTracks()[0].enabled = camOn;
+            const btn = document.getElementById('cam-tog');
+            btn.innerText = camOn ? "Камера: ВКЛ" : "Камера: ВИМК";
+            btn.classList.toggle('off', !camOn);
+        }
+    }
+
+    function toggleMic() {
+        if (localStream) {
+            micOn = !micOn;
+            localStream.getAudioTracks()[0].enabled = micOn;
+            const btn = document.getElementById('mic-tog');
+            btn.innerText = micOn ? "Мік: ВКЛ" : "Мік: ВИМК";
+            btn.classList.toggle('off', !micOn);
+        }
+    }
 
     function showP(pId, tab) {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -211,13 +237,13 @@
     }
 
     function copyId() {
-        navigator.clipboard.writeText(document.getElementById('my-id').innerText).then(() => alert("Скопійовано"));
+        navigator.clipboard.writeText(document.getElementById('my-id').innerText).then(() => alert("ID скопійовано"));
     }
 
     function shareL() {
         const url = `${window.location.origin}${window.location.pathname}?peer=${document.getElementById('my-id').innerText}`;
-        if (navigator.share) navigator.share({ title: 'P2P', url: url });
-        else { navigator.clipboard.writeText(url); alert("Link copied"); }
+        if (navigator.share) navigator.share({ title: 'P2P Messenger', url: url });
+        else { navigator.clipboard.writeText(url); alert("Посилання скопійовано"); }
     }
 </script>
 </body>
